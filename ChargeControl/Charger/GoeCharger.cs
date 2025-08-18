@@ -76,7 +76,7 @@ public class GoeCharger : ICharger
     {
         HttpClient client = new();
         
-        var url = $"{BaseUrl}/api/set?frc={ForceState.On}"; 
+        var url = $"{BaseUrl}/api/set?frc=2"; // on
         
         var response = await client.GetAsync(url);
         HandleResponse(url, response);
@@ -85,7 +85,7 @@ public class GoeCharger : ICharger
     {
         HttpClient client = new();
         
-        var url = $"{BaseUrl}/api/set?frc={ForceState.Off}"; 
+        var url = $"{BaseUrl}/api/set?frc=1"; // off
         
         var response = await client.GetAsync(url);
         HandleResponse(url, response);

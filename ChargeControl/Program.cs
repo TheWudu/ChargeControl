@@ -6,7 +6,7 @@ using ChargeControl.Charger;
 Console.WriteLine("Hello, World!");
 
 int amps = 8;
-double maxPower = 16.0;
+double? maxPower = null;
 
 if (args.Length > 0)
 {

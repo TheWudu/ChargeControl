@@ -7,15 +7,15 @@ public class ChargeController(
     ICharger charger,
     FroniusClient froniusClient,
     int minimalAmps = 8,
-    double maximumPowerToCharge = 16.0)
+    double? maximumPowerToCharge = null)
 {
     private States _state = States.NoCar;
     private bool _stopped;
     
     private const double MinimalPowerPvEnable = 4.0;
-    private const double MinimalPowerPvDisable = 3.0;
-    private const double MinimalSocLevelEnable = 70.0;
-    private const double MinimalSocLevelDisable = 50.0;
+    private const double MinimalPowerPvDisable = 2.5;
+    private const double MinimalSocLevelEnable = 50.0;
+    private const double MinimalSocLevelDisable = 30.0;
     
     private const int MaximumAmps = 16;
     private const int UpdateInterval = 3000;
@@ -205,9 +205,12 @@ public class ChargeController(
         var currentSocLevel = froniusClient.CurrentSocLevel();
         var chargedPower = charger.ChargedPower();
         var currentPower = froniusClient.CurrentPowerFlowProducing();
+        var overProduction = froniusClient.CurrentPowerFlowProducing() - froniusClient.CurrentPowerFlowLoad();
         
-        return currentSocLevel >= MinimalSocLevelEnable && chargedPower < maximumPowerToCharge && 
-               currentPower >= MinimalPowerPvEnable;
+        return currentSocLevel >= MinimalSocLevelEnable && 
+               (maximumPowerToCharge is null ? true : chargedPower < maximumPowerToCharge) && 
+               currentPower >= MinimalPowerPvEnable && 
+               overProduction >= MinimalPowerPvEnable;
     }
 
     private bool ShouldDisable()
