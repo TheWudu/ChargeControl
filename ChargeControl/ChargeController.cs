@@ -18,7 +18,7 @@ public class ChargeController(
     private const double MinimalSocLevelDisable = 30.0;
     
     private const int MaximumAmps = 16;
-    private const int UpdateInterval = 3000;
+    private const int UpdateInterval = 5000;
 
     public async Task Run()
     {
@@ -37,7 +37,7 @@ public class ChargeController(
             {
                 case States.NoCar: HandleNoCar(); break;
                 case States.Connected: HandleConnected(); break;
-                case States.Charging: HandleCharging(); break;
+                case States.Charging: await HandleCharging(); break;
                 case States.Stopped: HandleStopped(); break;
             }
             
@@ -142,7 +142,7 @@ public class ChargeController(
         Console.WriteLine($"Error: {charger.Error()}");
     }
     
-    private void HandleCharging()
+    private async Task HandleCharging()
     {
         Console.WriteLine("Charging ...");
         var ampereLimit = charger.AmpereLimit();
@@ -153,7 +153,7 @@ public class ChargeController(
             {
                 // Increase Amps
                 Console.WriteLine($"Increase amps by 1 to {ampereLimit + 1}");
-                _ = charger.ChangeAmp(1);
+                await charger.ChangeAmp(1);
             }
             else
             {
@@ -166,8 +166,8 @@ public class ChargeController(
             if (ampereLimit > minimalAmps)
             {
                 // decrease Amps
-                Console.WriteLine($"Decrease amps by 1 to {ampereLimit + 1}");
-                _ = charger.ChangeAmp(-1);
+                Console.WriteLine($"Decrease amps by 1 to {ampereLimit - 1}");
+                await charger.ChangeAmp(-1);
             }
             else
             {

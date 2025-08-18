@@ -76,7 +76,7 @@ public class GoeCharger : ICharger
     {
         HttpClient client = new();
         
-        var url = $"{BaseUrl}/api/set?frc=2"; // on
+        var url = $"{BaseUrl}/api/set?frc=0"; // neutral
         
         var response = await client.GetAsync(url);
         HandleResponse(url, response);
