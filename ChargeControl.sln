@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChargeControl", "ChargeControl\ChargeControl.csproj", "{F7EE02E4-6646-4231-8956-A3E24AE326CE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F7EE02E4-6646-4231-8956-A3E24AE326CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F7EE02E4-6646-4231-8956-A3E24AE326CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F7EE02E4-6646-4231-8956-A3E24AE326CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F7EE02E4-6646-4231-8956-A3E24AE326CE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
