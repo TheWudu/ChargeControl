@@ -1,8 +1,7 @@
 using System.Net;
 using System.Text.Json;
-using ChargeControl.Charger.GoeChargerApi;
 
-namespace ChargeControl.Charger;
+namespace ChargeControl.Charger.GoeChargerApi;
 
 public class GoeCharger : ICharger
 {

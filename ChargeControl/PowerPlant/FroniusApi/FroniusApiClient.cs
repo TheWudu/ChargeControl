@@ -1,7 +1,6 @@
 using System.Text.Json;
-using ChargeControl.PowerPlant.FroniusApi;
 
-namespace ChargeControl.PowerPlant;
+namespace ChargeControl.PowerPlant.FroniusApi;
 
 public class FroniusApiClient : IPowerPlant
 {
@@ -16,7 +15,7 @@ public class FroniusApiClient : IPowerPlant
         PropertyNameCaseInsensitive = true
     };
 
-    public async Task Fetch()
+    public async Task ReadValues()
     {
         // await FetchInverterRealtimeData();
         await FetchStorageRealtimeData();
@@ -84,12 +83,12 @@ public class FroniusApiClient : IPowerPlant
     }
     
 
-    public double SocCurrentLevel()
+    public double CurrentBatterLevel()
     {
         return _storageRealtimeData?.Body.Data.Values.First().Controller.StateOfCharge_Relative ?? 0.0;
     }
     
-    public double SocCapacity()
+    public double BatteryCapacity()
     {
         return _storageRealtimeData?.Body.Data.Values.First().Controller.Capacity_Maximum ?? 0.0;
     }

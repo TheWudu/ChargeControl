@@ -79,7 +79,7 @@ public class ChargeController(
         Console.WriteLine(
             $"PowerSource: Currently Producting {powerPlant.CurrentPowerFlowProducing():0.00} kW, " +
             $"Current Load: {powerPlant.CurrentPowerFlowLoad():0.00} kW, " +
-            $"Battery Level: {powerPlant.SocCurrentLevel()} %");
+            $"Battery Level: {powerPlant.CurrentBatterLevel()} %");
     }
 
     private async Task UpdateValues()
@@ -88,7 +88,7 @@ public class ChargeController(
         {
             List<Task> updates = [
                 charger.ReadValues(),
-                powerPlant.Fetch()
+                powerPlant.ReadValues()
             ];
             await Task.WhenAll(updates);
         }
@@ -205,7 +205,7 @@ public class ChargeController(
     private bool ShouldIncreaseAmps()
     {
         var overProduction = powerPlant.CurrentPowerFlowProducing() - powerPlant.CurrentPowerFlowLoad();
-        var currentSocLevel = powerPlant.SocCurrentLevel();
+        var currentSocLevel = powerPlant.CurrentBatterLevel();
         
         return overProduction > 1.0 && currentSocLevel > MinimalSocLevelEnable;
     }
@@ -213,14 +213,14 @@ public class ChargeController(
     private bool ShouldDecreaseAmps()
     {
         var overProduction = powerPlant.CurrentPowerFlowProducing() - powerPlant.CurrentPowerFlowLoad();
-        var currentSocLevel = powerPlant.SocCurrentLevel();
+        var currentSocLevel = powerPlant.CurrentBatterLevel();
         
         return overProduction < -1.0 || currentSocLevel < MinimalSocLevelDisable;
     }
 
     private bool ShouldEnable()
     {
-        var currentSocLevel = powerPlant.SocCurrentLevel();
+        var currentSocLevel = powerPlant.CurrentBatterLevel();
         var chargedPower = charger.ChargedPower();
         var currentPower = powerPlant.CurrentPowerFlowProducing();
         var overProduction = powerPlant.CurrentPowerFlowProducing() - powerPlant.CurrentPowerFlowLoad();
@@ -233,7 +233,7 @@ public class ChargeController(
 
     private bool ShouldDisable()
     {
-        var currentSocLevel = powerPlant.SocCurrentLevel();
+        var currentSocLevel = powerPlant.CurrentBatterLevel();
         var currentPower = powerPlant.CurrentPowerFlowProducing();
         
         return currentSocLevel <= MinimalSocLevelDisable || 
