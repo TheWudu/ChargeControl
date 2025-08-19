@@ -1,11 +1,12 @@
 using ChargeControl.Charger;
 using ChargeControl.Charger.GoeChargerApi;
+using ChargeControl.PowerPlant;
 
 namespace ChargeControl;
 
 public class ChargeController(
     ICharger charger,
-    FroniusClient froniusClient,
+    IPowerPlant powerPlant,
     int minimalAmps = 8,
     double? maximumPowerToCharge = null)
 {
@@ -19,6 +20,23 @@ public class ChargeController(
     
     private const int MaximumAmps = 16;
     private const int UpdateInterval = 5000;
+
+    public async Task Setup()
+    {
+        await UpdateValues();
+
+        // start with minimal Amps
+        if (charger.AmpereLimit() != minimalAmps)
+        {
+            await charger.SetAmpereLimit(minimalAmps);
+        }
+
+        // set maximum power to charge if given
+        if (maximumPowerToCharge != null && !charger.PowerLimit().Equals(maximumPowerToCharge))
+        {
+            await charger.SetPowerLimit((double)maximumPowerToCharge);
+        }
+    }
 
     public async Task Run()
     {
@@ -59,9 +77,9 @@ public class ChargeController(
                           $"CarStatus: {charger.CarStatus()}");
 
         Console.WriteLine(
-            $"PowerSource: Currently Producting {froniusClient.CurrentPowerFlowProducing():0.00} kW, " +
-            $"Current Load: {froniusClient.CurrentPowerFlowLoad():0.00} kW, " +
-            $"Battery Level: {froniusClient.CurrentSocLevel()} %");
+            $"PowerSource: Currently Producting {powerPlant.CurrentPowerFlowProducing():0.00} kW, " +
+            $"Current Load: {powerPlant.CurrentPowerFlowLoad():0.00} kW, " +
+            $"Battery Level: {powerPlant.SocCurrentLevel()} %");
     }
 
     private async Task UpdateValues()
@@ -70,7 +88,7 @@ public class ChargeController(
         {
             List<Task> updates = [
                 charger.ReadValues(),
-                froniusClient.Fetch()
+                powerPlant.Fetch()
             ];
             await Task.WhenAll(updates);
         }
@@ -186,26 +204,26 @@ public class ChargeController(
 
     private bool ShouldIncreaseAmps()
     {
-        var overProduction = froniusClient.CurrentPowerFlowProducing() - froniusClient.CurrentPowerFlowLoad();
-        var currentSocLevel = froniusClient.CurrentSocLevel();
+        var overProduction = powerPlant.CurrentPowerFlowProducing() - powerPlant.CurrentPowerFlowLoad();
+        var currentSocLevel = powerPlant.SocCurrentLevel();
         
         return overProduction > 1.0 && currentSocLevel > MinimalSocLevelEnable;
     }
 
     private bool ShouldDecreaseAmps()
     {
-        var overProduction = froniusClient.CurrentPowerFlowProducing() - froniusClient.CurrentPowerFlowLoad();
-        var currentSocLevel = froniusClient.CurrentSocLevel();
+        var overProduction = powerPlant.CurrentPowerFlowProducing() - powerPlant.CurrentPowerFlowLoad();
+        var currentSocLevel = powerPlant.SocCurrentLevel();
         
         return overProduction < -1.0 || currentSocLevel < MinimalSocLevelDisable;
     }
 
     private bool ShouldEnable()
     {
-        var currentSocLevel = froniusClient.CurrentSocLevel();
+        var currentSocLevel = powerPlant.SocCurrentLevel();
         var chargedPower = charger.ChargedPower();
-        var currentPower = froniusClient.CurrentPowerFlowProducing();
-        var overProduction = froniusClient.CurrentPowerFlowProducing() - froniusClient.CurrentPowerFlowLoad();
+        var currentPower = powerPlant.CurrentPowerFlowProducing();
+        var overProduction = powerPlant.CurrentPowerFlowProducing() - powerPlant.CurrentPowerFlowLoad();
         
         return currentSocLevel >= MinimalSocLevelEnable && 
                (maximumPowerToCharge is null ? true : chargedPower < maximumPowerToCharge) && 
@@ -215,8 +233,8 @@ public class ChargeController(
 
     private bool ShouldDisable()
     {
-        var currentSocLevel = froniusClient.CurrentSocLevel();
-        var currentPower = froniusClient.CurrentPowerFlowProducing();
+        var currentSocLevel = powerPlant.SocCurrentLevel();
+        var currentPower = powerPlant.CurrentPowerFlowProducing();
         
         return currentSocLevel <= MinimalSocLevelDisable || 
                currentPower <= MinimalPowerPvDisable;

@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace ChargeControl.Fronius;
+namespace ChargeControl.PowerPlant.FroniusApi;
 
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Skip)]
 public class InverterRealtimeDataResponse

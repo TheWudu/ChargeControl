@@ -14,5 +14,8 @@ public interface ICharger
     public int AmpereLimit();
     public CarState CarStatus();
 
+    public Task SetAmpereLimit(int ampere);
+    public Task SetPowerLimit(double limit);
+
     public string? Error();
 }

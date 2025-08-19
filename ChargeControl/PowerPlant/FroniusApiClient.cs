@@ -1,9 +1,9 @@
 using System.Text.Json;
-using ChargeControl.Fronius;
+using ChargeControl.PowerPlant.FroniusApi;
 
-namespace ChargeControl;
+namespace ChargeControl.PowerPlant;
 
-public class FroniusClient
+public class FroniusApiClient : IPowerPlant
 {
     // private InverterRealtimeDataResponse? _inverterRealtimeData;
     private StorageRealtimeDataResponse? _storageRealtimeData;
@@ -84,7 +84,7 @@ public class FroniusClient
     }
     
 
-    public double CurrentSocLevel()
+    public double SocCurrentLevel()
     {
         return _storageRealtimeData?.Body.Data.Values.First().Controller.StateOfCharge_Relative ?? 0.0;
     }

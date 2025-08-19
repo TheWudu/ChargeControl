@@ -1,4 +1,4 @@
-namespace ChargeControl.Fronius;
+namespace ChargeControl.PowerPlant.FroniusApi;
 
 
 // "Body" => {

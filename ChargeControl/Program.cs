@@ -2,6 +2,7 @@
 
 using ChargeControl;
 using ChargeControl.Charger;
+using ChargeControl.PowerPlant;
 
 Console.WriteLine("Hello, World!");
 
@@ -55,7 +56,7 @@ for (double i = 2.0; i < 8.5; i += 0.5)
     KwToAmpere(i);
 }
 
-var froniusClient = new FroniusClient();
+var froniusClient = new FroniusApiClient();
 var controller = new ChargeController(charger, froniusClient, amps, maxPower);
 
 Console.CancelKeyPress += delegate(object? sender, ConsoleCancelEventArgs e) {
@@ -63,6 +64,7 @@ Console.CancelKeyPress += delegate(object? sender, ConsoleCancelEventArgs e) {
     controller.Stop();
 };
 
+await controller.Setup();
 await controller.Run();
 
 return;

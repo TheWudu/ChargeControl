@@ -53,6 +53,26 @@ public class GoeCharger : ICharger
         return Values?.car ?? CarState.Unknown;
     }
 
+    public async Task SetAmpereLimit(int ampere)
+    {
+        HttpClient client = new();
+        
+        var url = $"{BaseUrl}/api/set?amp={ampere}";
+        
+        var response = await client.GetAsync(url);
+        HandleResponse(url, response);
+    }
+
+    public async Task SetPowerLimit(double limit)
+    {
+        HttpClient client = new();
+        
+        var url = $"{BaseUrl}/api/set?dwo={limit * 1000}";
+        
+        var response = await client.GetAsync(url);
+        HandleResponse(url, response);
+    }
+
     public string? Error()
     {
         if (Values?.err == GoeChargerApi.Error.None)
