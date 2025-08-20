@@ -4,19 +4,12 @@ using ChargeControl.PowerPlant;
 
 namespace ChargeControl;
 
-public class ChargeController
+public class ChargeController(
+    ICharger charger,
+    IPowerPlant powerPlant,
+    int? minimalAmps = null,
+    double? maximumPowerToCharge = null)
 {
-    public ChargeController(
-        ICharger charger,
-        IPowerPlant powerPlant,
-        int? minimalAmps = null,
-        double? maximumPowerToCharge = null)
-    {
-        this.charger = charger;
-        this.powerPlant = powerPlant;
-        _minimalAmpere = minimalAmps ?? 8;
-        _maximumPowerToCharge = maximumPowerToCharge;
-    }
     private States _state = States.NoCar;
     private bool _stopped;
     
@@ -25,10 +18,7 @@ public class ChargeController
     private const double MinimalSocLevelEnable = 50.0;
     private const double MinimalSocLevelDisable = 30.0;
 
-    private readonly ICharger charger;
-    private readonly IPowerPlant powerPlant;
-    private double? _maximumPowerToCharge;
-    private int _minimalAmpere;
+    private readonly int _minimalAmpere = minimalAmps ?? 8;
     private const int MaximumAmps = 16;
     private const int UpdateInterval = 5000;
 
@@ -43,9 +33,9 @@ public class ChargeController
         }
 
         // set maximum power to charge if given
-        if (_maximumPowerToCharge != null && !charger.PowerLimit().Equals(_maximumPowerToCharge))
+        if (maximumPowerToCharge != null && !charger.PowerLimit().Equals(maximumPowerToCharge))
         {
-            await charger.SetPowerLimit((double)_maximumPowerToCharge);
+            await charger.SetPowerLimit((double)maximumPowerToCharge);
         }
     }
 
@@ -53,7 +43,7 @@ public class ChargeController
     {
         _stopped = false;
         
-        Console.WriteLine($"Minimum Ampere: {_minimalAmpere}, Max Power: {_maximumPowerToCharge}");
+        Console.WriteLine($"Minimum Ampere: {_minimalAmpere}, Max Power: {maximumPowerToCharge}");
         
         while (!_stopped)
         {
@@ -88,7 +78,7 @@ public class ChargeController
                           $"CarStatus: {charger.CarStatus()}");
 
         Console.WriteLine(
-            $"PowerSource: Currently Producting {powerPlant.CurrentPowerFlowProducing():0.00} kW, " +
+            $"PowerSource: Currently Producing {powerPlant.CurrentPowerFlowProducing():0.00} kW, " +
             $"Current Load: {powerPlant.CurrentPowerFlowLoad():0.00} kW, " +
             $"Battery Level: {powerPlant.CurrentBatterLevel()} %");
     }
@@ -237,7 +227,7 @@ public class ChargeController
         var overProduction = powerPlant.CurrentPowerFlowProducing() - powerPlant.CurrentPowerFlowLoad();
         
         return currentSocLevel >= MinimalSocLevelEnable && 
-               (_maximumPowerToCharge is null ? true : chargedPower < _maximumPowerToCharge) && 
+               (maximumPowerToCharge is null || chargedPower < maximumPowerToCharge) && 
                currentPower >= MinimalPowerPvEnable && 
                overProduction >= MinimalPowerPvEnable;
     }
