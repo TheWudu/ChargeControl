@@ -4,12 +4,19 @@ using ChargeControl.PowerPlant;
 
 namespace ChargeControl;
 
-public class ChargeController(
-    ICharger charger,
-    IPowerPlant powerPlant,
-    int minimalAmps = 8,
-    double? maximumPowerToCharge = null)
+public class ChargeController
 {
+    public ChargeController(
+        ICharger charger,
+        IPowerPlant powerPlant,
+        int? minimalAmps = null,
+        double? maximumPowerToCharge = null)
+    {
+        this.charger = charger;
+        this.powerPlant = powerPlant;
+        _minimalAmpere = minimalAmps ?? 8;
+        _maximumPowerToCharge = maximumPowerToCharge;
+    }
     private States _state = States.NoCar;
     private bool _stopped;
     
@@ -17,7 +24,11 @@ public class ChargeController(
     private const double MinimalPowerPvDisable = 2.5;
     private const double MinimalSocLevelEnable = 50.0;
     private const double MinimalSocLevelDisable = 30.0;
-    
+
+    private readonly ICharger charger;
+    private readonly IPowerPlant powerPlant;
+    private double? _maximumPowerToCharge;
+    private int _minimalAmpere;
     private const int MaximumAmps = 16;
     private const int UpdateInterval = 5000;
 
@@ -26,15 +37,15 @@ public class ChargeController(
         await UpdateValues();
 
         // start with minimal Amps
-        if (charger.AmpereLimit() != minimalAmps)
+        if (charger.AmpereLimit() != _minimalAmpere)
         {
-            await charger.SetAmpereLimit(minimalAmps);
+            await charger.SetAmpereLimit(_minimalAmpere);
         }
 
         // set maximum power to charge if given
-        if (maximumPowerToCharge != null && !charger.PowerLimit().Equals(maximumPowerToCharge))
+        if (_maximumPowerToCharge != null && !charger.PowerLimit().Equals(_maximumPowerToCharge))
         {
-            await charger.SetPowerLimit((double)maximumPowerToCharge);
+            await charger.SetPowerLimit((double)_maximumPowerToCharge);
         }
     }
 
@@ -42,7 +53,7 @@ public class ChargeController(
     {
         _stopped = false;
         
-        Console.WriteLine($"Minimum Ampere: {minimalAmps}, Max Power: {maximumPowerToCharge}");
+        Console.WriteLine($"Minimum Ampere: {_minimalAmpere}, Max Power: {_maximumPowerToCharge}");
         
         while (!_stopped)
         {
@@ -181,7 +192,7 @@ public class ChargeController(
         
         if (ShouldDecreaseAmps())
         {
-            if (ampereLimit > minimalAmps)
+            if (ampereLimit > _minimalAmpere)
             {
                 // decrease Amps
                 Console.WriteLine($"Decrease amps by 1 to {ampereLimit - 1}");
@@ -226,7 +237,7 @@ public class ChargeController(
         var overProduction = powerPlant.CurrentPowerFlowProducing() - powerPlant.CurrentPowerFlowLoad();
         
         return currentSocLevel >= MinimalSocLevelEnable && 
-               (maximumPowerToCharge is null ? true : chargedPower < maximumPowerToCharge) && 
+               (_maximumPowerToCharge is null ? true : chargedPower < _maximumPowerToCharge) && 
                currentPower >= MinimalPowerPvEnable && 
                overProduction >= MinimalPowerPvEnable;
     }

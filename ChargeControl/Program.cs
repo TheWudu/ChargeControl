@@ -8,23 +8,12 @@ using ChargeControl.PowerPlant.FroniusApi;
 
 Console.WriteLine("Hello, World!");
 
-int amps = 8;
+int? amps = null;
 double? maxPower = null;
 
-if (args.Length > 0)
-{
-    if (args.Contains("-amps"))
-    {
-        var index = args.ToList().FindIndex(s => s == "-amps");
-        amps = Convert.ToInt16(args.ElementAt(index + 1));
-    }
-    
-    if (args.Contains("-max"))
-    {
-        var index = args.ToList().FindIndex(s => s == "-max");
-        maxPower = Convert.ToDouble(args.ElementAt(index + 1));
-    }
-}
+var argsParser = new ArgumentsParser(args);
+amps = argsParser.GetInt("minAmpere", true);
+maxPower = argsParser.GetDouble("maxPower", true);
 
 var charger = new GoeCharger();
 _ = await charger.ReadValues();
