@@ -15,8 +15,8 @@ public class ChargeController(
     
     private const double MinimalPowerPvEnable = 4.0;
     private const double MinimalPowerPvDisable = 2.5;
-    private const double MinimalSocLevelEnable = 50.0;
-    private const double MinimalSocLevelDisable = 30.0;
+    private const double MinimalBatteryLevelEnable = 50.0;
+    private const double MinimalBatteryLevelDisable = 30.0;
 
     private readonly int _minimalAmpere = minimalAmps ?? 8;
     private const int MaximumAmps = 16;
@@ -214,30 +214,20 @@ public class ChargeController(
     
     private bool ShouldIncreaseAmps()
     {
-        var overProduction = powerPlant.CurrentlyProducing() - powerPlant.CurrentLoad();
-        var currentSocLevel = powerPlant.CurrentBatterLevel();
-        
-        return overProduction > 1.0 && currentSocLevel > MinimalSocLevelEnable;
+        return OverProduction() > 1.0 && EnoughBattery();
     }
 
     private bool ShouldDecreaseAmps()
     {
-        var overProduction = powerPlant.CurrentlyProducing() - powerPlant.CurrentLoad();
-        var currentSocLevel = powerPlant.CurrentBatterLevel();
-        
-        return overProduction < -1.0 || currentSocLevel < MinimalSocLevelDisable;
+        return OverProduction() < -1.0 || TooLowBattery();
     }
 
     private bool ShouldEnable()
     {
-        var chargedPower = charger.ChargedPower();
-        var currentPower = powerPlant.CurrentlyProducing();
-        var overProduction = powerPlant.CurrentlyProducing() - powerPlant.CurrentLoad();
-        
         return EnoughBattery() && 
-               (maximumPowerToCharge is null || chargedPower < maximumPowerToCharge) && 
-               currentPower >= MinimalPowerPvEnable && 
-               overProduction >= MinimalPowerPvEnable;
+               (maximumPowerToCharge is null || charger.ChargedPower() < maximumPowerToCharge) && 
+               powerPlant.CurrentlyProducing() >= MinimalPowerPvEnable && 
+               OverProduction() >= MinimalPowerPvEnable;
     }
 
     private bool EnoughBattery()
@@ -245,15 +235,25 @@ public class ChargeController(
         if(!powerPlant.HasBattery())
             return true;
         
-        return powerPlant.CurrentBatterLevel() > MinimalSocLevelEnable;
+        return powerPlant.CurrentBatterLevel() > MinimalBatteryLevelEnable;
+    }
+
+    private bool TooLowBattery()
+    {
+        if (!powerPlant.HasBattery())
+            return false;
+        
+        return powerPlant.CurrentBatterLevel() <= MinimalBatteryLevelDisable;
+    }
+
+    private double OverProduction()
+    {
+        return powerPlant.CurrentlyProducing() - powerPlant.CurrentLoad();
     }
 
     private bool ShouldDisable()
     {
-        var currentSocLevel = powerPlant.CurrentBatterLevel();
-        var currentPower = powerPlant.CurrentlyProducing();
-        
-        return currentSocLevel <= MinimalSocLevelDisable || 
-               currentPower <= MinimalPowerPvDisable;
+        return TooLowBattery() || 
+               powerPlant.CurrentlyProducing() <= MinimalPowerPvDisable;
     }
 }
