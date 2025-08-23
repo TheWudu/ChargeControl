@@ -5,6 +5,7 @@ namespace ChargeControl.Charger;
 public interface ICharger
 {
     public Task<bool> UpdateValues();
+    
     public Task ChangeCurrent(int changeBy);
     public Task StartCharging();
     public Task StopCharging();

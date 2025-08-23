@@ -8,7 +8,7 @@ public class FroniusApiClient : IPowerPlant
     private StorageRealtimeDataResponse? _storageRealtimeData;
     private PowerFlowRealtimedataResponse? _powerFlowRealtimeData;
 
-    private readonly string _baseUrl = "http://192.168.178.63";
+    private readonly string _baseUrl = "http://fronius";
     
     private readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
     {

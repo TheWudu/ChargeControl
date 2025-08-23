@@ -6,7 +6,7 @@ namespace ChargeControl.Charger.GoeChargerApi;
 public class GoeCharger : ICharger
 {
     public ChargerResponse? Values;
-    private readonly string BaseUrl = "http://192.168.178.53";
+    private readonly string BaseUrl = "http://go-echarger";
 
     public GoeCharger()
     {
