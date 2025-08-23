@@ -15,7 +15,7 @@ public class FroniusApiClient : IPowerPlant
         PropertyNameCaseInsensitive = true
     };
 
-    public async Task ReadValues()
+    public async Task UpdateValues()
     {
         // await FetchInverterRealtimeData();
         await FetchStorageRealtimeData();
@@ -62,26 +62,31 @@ public class FroniusApiClient : IPowerPlant
     //     return _inverterRealtimeData?.Body.Data.PAC.Unit ?? "N/A";
     // }
 
-    public double CurrentPowerFlowProducing()
+    public double CurrentlyProducing()
     {
         return _powerFlowRealtimeData?.Body.Data.Site.P_PV / 1000.0 ?? 0.0;
     }
     
-    public double CurrentPowerFlowLoad()
+    public double CurrentLoad()
     {
         return -_powerFlowRealtimeData?.Body.Data.Site.P_Load / 1000.0 ?? 0.0;
     }
 
-    public double CurrentPowerFlowGrid()
+    public double CurrentPowerToGrid()
     {
         return _powerFlowRealtimeData?.Body.Data.Site.P_Grid / 1000.0 ?? 0.0;
     }
 
-    public double CurrentPowerFlowAkku()
+    public double CurrentPowerToBattery()
     {
         return _powerFlowRealtimeData?.Body.Data.Site.P_Akku / 1000.0 ?? 0.0;
     }
-    
+
+    public bool HasBattery()
+    {
+        return BatteryCapacity() > 0.0;
+    }
+
 
     public double CurrentBatterLevel()
     {

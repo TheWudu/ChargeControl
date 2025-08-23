@@ -27,9 +27,9 @@ public class ChargeController(
         await UpdateValues();
 
         // start with minimal Amps
-        if (charger.AmpereLimit() != _minimalAmpere)
+        if (charger.CurrentLimit() != _minimalAmpere)
         {
-            await charger.SetAmpereLimit(_minimalAmpere);
+            await charger.SetCurrentLimit(_minimalAmpere);
         }
 
         // set maximum power to charge if given
@@ -74,12 +74,12 @@ public class ChargeController(
     private void PrintValues()
     {
         Console.WriteLine($"Charger: Loaded into car: {charger.ChargedPower():00.00} KWh, " +
-                          $"PowerLimit: {charger.PowerLimit()} kWh, Current Amps: {charger.AmpereLimit()} A, " +
+                          $"PowerLimit: {charger.PowerLimit()} kWh, Current Amps: {charger.CurrentLimit()} A, " +
                           $"CarStatus: {charger.CarStatus()}");
 
         Console.WriteLine(
-            $"PowerSource: Currently Producing {powerPlant.CurrentPowerFlowProducing():0.00} kW, " +
-            $"Current Load: {powerPlant.CurrentPowerFlowLoad():0.00} kW, " +
+            $"PowerSource: Currently Producing {powerPlant.CurrentlyProducing():0.00} kW, " +
+            $"Current Load: {powerPlant.CurrentLoad():0.00} kW, " +
             $"Battery Level: {powerPlant.CurrentBatterLevel()} %");
     }
 
@@ -88,8 +88,8 @@ public class ChargeController(
         try
         {
             List<Task> updates = [
-                charger.ReadValues(),
-                powerPlant.ReadValues()
+                charger.UpdateValues(),
+                powerPlant.UpdateValues()
             ];
             await Task.WhenAll(updates);
         }
@@ -164,34 +164,15 @@ public class ChargeController(
     private async Task HandleCharging()
     {
         Console.WriteLine("Charging ...");
-        var ampereLimit = charger.AmpereLimit();
         
         if (ShouldIncreaseAmps())
         {
-            if (charger.AmpereLimit() < MaximumAmps)
-            {
-                // Increase Amps
-                Console.WriteLine($"Increase amps by 1 to {ampereLimit + 1}");
-                await charger.ChangeAmp(1);
-            }
-            else
-            {
-                Console.WriteLine($"Cant decrease further, {ampereLimit} is maximum");
-            }
+            await IncreaseAmps();
         }
         
         if (ShouldDecreaseAmps())
         {
-            if (ampereLimit > _minimalAmpere)
-            {
-                // decrease Amps
-                Console.WriteLine($"Decrease amps by 1 to {ampereLimit - 1}");
-                await charger.ChangeAmp(-1);
-            }
-            else
-            {
-                Console.WriteLine($"Cant decrease further, {ampereLimit} is minimum");
-            }
+            await DecreaseAmps();
         }
 
         if (ShouldDisable())
@@ -202,10 +183,38 @@ public class ChargeController(
             _state = States.Stopped;
         }
     }
+    
+    private async Task IncreaseAmps()
+    {
+        var ampereLimit = charger.CurrentLimit();
+        if (ampereLimit < MaximumAmps)
+        {
+            Console.WriteLine($"Increase amps by 1 to {ampereLimit + 1}");
+            await charger.ChangeCurrent(1);
+        }
+        else
+        {
+            Console.WriteLine($"Cant decrease further, {ampereLimit} is maximum");
+        }
+    }
 
+    private async Task DecreaseAmps()
+    {
+        var ampereLimit = charger.CurrentLimit();
+        if (ampereLimit > _minimalAmpere)
+        {
+            Console.WriteLine($"Decrease amps by 1 to {ampereLimit - 1}");
+            await charger.ChangeCurrent(-1);
+        }
+        else
+        {
+            Console.WriteLine($"Cant decrease further, {ampereLimit} is minimum");
+        }
+    }
+    
     private bool ShouldIncreaseAmps()
     {
-        var overProduction = powerPlant.CurrentPowerFlowProducing() - powerPlant.CurrentPowerFlowLoad();
+        var overProduction = powerPlant.CurrentlyProducing() - powerPlant.CurrentLoad();
         var currentSocLevel = powerPlant.CurrentBatterLevel();
         
         return overProduction > 1.0 && currentSocLevel > MinimalSocLevelEnable;
@@ -213,7 +222,7 @@ public class ChargeController(
 
     private bool ShouldDecreaseAmps()
     {
-        var overProduction = powerPlant.CurrentPowerFlowProducing() - powerPlant.CurrentPowerFlowLoad();
+        var overProduction = powerPlant.CurrentlyProducing() - powerPlant.CurrentLoad();
         var currentSocLevel = powerPlant.CurrentBatterLevel();
         
         return overProduction < -1.0 || currentSocLevel < MinimalSocLevelDisable;
@@ -221,21 +230,28 @@ public class ChargeController(
 
     private bool ShouldEnable()
     {
-        var currentSocLevel = powerPlant.CurrentBatterLevel();
         var chargedPower = charger.ChargedPower();
-        var currentPower = powerPlant.CurrentPowerFlowProducing();
-        var overProduction = powerPlant.CurrentPowerFlowProducing() - powerPlant.CurrentPowerFlowLoad();
+        var currentPower = powerPlant.CurrentlyProducing();
+        var overProduction = powerPlant.CurrentlyProducing() - powerPlant.CurrentLoad();
         
-        return currentSocLevel >= MinimalSocLevelEnable && 
+        return EnoughBattery() && 
                (maximumPowerToCharge is null || chargedPower < maximumPowerToCharge) && 
                currentPower >= MinimalPowerPvEnable && 
                overProduction >= MinimalPowerPvEnable;
     }
 
+    private bool EnoughBattery()
+    {
+        if(!powerPlant.HasBattery())
+            return true;
+        
+        return powerPlant.CurrentBatterLevel() > MinimalSocLevelEnable;
+    }
+
     private bool ShouldDisable()
     {
         var currentSocLevel = powerPlant.CurrentBatterLevel();
-        var currentPower = powerPlant.CurrentPowerFlowProducing();
+        var currentPower = powerPlant.CurrentlyProducing();
         
         return currentSocLevel <= MinimalSocLevelDisable || 
                currentPower <= MinimalPowerPvDisable;

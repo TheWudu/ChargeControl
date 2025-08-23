@@ -14,7 +14,7 @@ public class GoeCharger : ICharger
         
     }
     
-    public async Task<bool> ReadValues()
+    public async Task<bool> UpdateValues()
     {
         try
         {
@@ -42,7 +42,7 @@ public class GoeCharger : ICharger
         return Values?.dwo / 1000.0 ?? 0.0;
     }
     
-    public int AmpereLimit()
+    public int CurrentLimit()
     {
         return Values?.amp ?? 0;
     }
@@ -52,7 +52,7 @@ public class GoeCharger : ICharger
         return Values?.car ?? CarState.Unknown;
     }
 
-    public async Task SetAmpereLimit(int ampere)
+    public async Task SetCurrentLimit(int ampere)
     {
         HttpClient client = new();
         
@@ -80,7 +80,7 @@ public class GoeCharger : ICharger
         return Values?.err.ToString();
     }
 
-    public async Task ChangeAmp(int changeBy)
+    public async Task ChangeCurrent(int changeBy)
     {
         HttpClient client = new();
         

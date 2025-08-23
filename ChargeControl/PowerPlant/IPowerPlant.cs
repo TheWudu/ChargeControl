@@ -2,13 +2,14 @@ namespace ChargeControl.PowerPlant;
 
 public interface IPowerPlant
 {
-    public Task ReadValues();
+    public Task UpdateValues();
 
-    public double CurrentPowerFlowProducing();
-    public double CurrentPowerFlowLoad();
-    public double CurrentPowerFlowGrid();
-    public double CurrentPowerFlowAkku();
-    
+    public double CurrentlyProducing();
+    public double CurrentLoad();
+    public double CurrentPowerToGrid();
+    public double CurrentPowerToBattery();
+
+    public bool HasBattery();
     public double CurrentBatterLevel();
     public double BatteryCapacity();
 }
