@@ -20,17 +20,17 @@ This is done every few seconds. Based on those values, the interfaces
 need to implement a few methods which then are used to start or stop charging,
 changing the current current to use.
 
-Depending on the currently produces power, and the current load, the charge-controller
+Depending on the currently produced power, and the current load, the charge-controller
 increases or decreases also the current. This should enable an optimal load.
 
 ## Fronius API
 
-To allow using the Fronius Solar API which i use with the `FroniusClient`, you need to 
+To allow using the Fronius Solar API which I use with the `FroniusClient`, you need to 
 enable the Solar API v1 via HTTP on your inverter first. 
 
 This is possible at:
 
-http://<your-inverter-ip-or-name>/app/solar-api
+http://\<your-inverter-ip-or-name\>/app/solar-api
 
 To ease access, maybe just add a dns name on your router, like "fronius" or similar, 
 so you can acces
@@ -43,7 +43,7 @@ https://www.fronius.com/~/downloads/Solar%20Energy/Operating%20Instructions/42,0
 
 ## Go-E Charger
 
-Go-E charger supports an own http API which is documented here:
+Go-E charger supports an own HTTP API which is documented here:
 
 https://github.com/goecharger/go-eCharger-API-v2
 
