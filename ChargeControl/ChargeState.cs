@@ -1,6 +1,6 @@
 namespace ChargeControl;
 
-public enum States
+public enum ChargeState
 {
     NoCar,
     Connected,

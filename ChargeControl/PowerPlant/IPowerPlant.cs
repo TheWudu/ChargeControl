@@ -2,7 +2,7 @@ namespace ChargeControl.PowerPlant;
 
 public interface IPowerPlant
 {
-    public Task UpdateValues();
+    public Task<bool> UpdateValues();
 
     public double CurrentlyProducing();
     public double CurrentLoad();

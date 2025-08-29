@@ -15,11 +15,13 @@ public class FroniusApiClient : IPowerPlant
         PropertyNameCaseInsensitive = true
     };
 
-    public async Task UpdateValues()
+    public async Task<bool> UpdateValues()
     {
         // await FetchInverterRealtimeData();
         await FetchStorageRealtimeData();
         await FetchPowerFlowRealtimeData();
+
+        return true;
     }
     
     // private async Task FetchInverterRealtimeData()

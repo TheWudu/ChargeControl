@@ -8,10 +8,12 @@ public class ChargeController(
     ICharger charger,
     IPowerPlant powerPlant,
     int? minimalAmps = null,
-    double? maximumPowerToCharge = null)
+    double? maximumPowerToCharge = null,
+    bool? stopped = false,
+    int updateInterval = 5000)
 {
-    private States _state = States.NoCar;
-    private bool _stopped;
+    private ChargeState ChargeState = ChargeState.NoCar;
+    private bool _stopped = stopped ?? false;
     
     private const double MinimalPowerPvEnable = 4.0;
     private const double MinimalPowerPvDisable = 2.5;
@@ -20,7 +22,12 @@ public class ChargeController(
 
     private readonly int _minimalAmpere = minimalAmps ?? 8;
     private const int MaximumAmps = 16;
-    private const int UpdateInterval = 5000;
+    private readonly int _updateInterval = updateInterval;
+
+    public ChargeState GetChargeState()
+    {
+        return ChargeState;
+    }
 
     public async Task Setup()
     {
@@ -41,27 +48,25 @@ public class ChargeController(
 
     public async Task Run()
     {
-        _stopped = false;
-        
         Console.WriteLine($"Minimum Ampere: {_minimalAmpere}, Max Power: {maximumPowerToCharge}");
-        
-        while (!_stopped)
+
+        do
         {
             await UpdateValues();
             PrintValues();
 
             UpdateState();
-            
-            switch (_state)
+
+            switch (ChargeState)
             {
-                case States.NoCar: HandleNoCar(); break;
-                case States.Connected: HandleConnected(); break;
-                case States.Charging: await HandleCharging(); break;
-                case States.Stopped: HandleStopped(); break;
+                case ChargeState.NoCar: HandleNoCar(); break;
+                case ChargeState.Connected: HandleConnected(); break;
+                case ChargeState.Charging: await HandleCharging(); break;
+                case ChargeState.Stopped: HandleStopped(); break;
             }
-            
-            Thread.Sleep(UpdateInterval);
-        }
+
+            Thread.Sleep(_updateInterval);
+        } while (!_stopped);
         
         Console.WriteLine("Stopping controller ... ");
     }
@@ -108,20 +113,20 @@ public class ChargeController(
             case CarState.Unknown:
                 break;
             case CarState.Idle:
-                _state = States.NoCar;
+                ChargeState = ChargeState.NoCar;
                 break;
             case CarState.Charging:
-                _state = States.Charging;
+                ChargeState = ChargeState.Charging;
                 break;
             case CarState.WaitCar:
                 Console.WriteLine("State: WaitCar");
                 break;
             case CarState.Complete:
-                _state = States.Stopped;
+                ChargeState = ChargeState.Stopped;
                 break;
             case CarState.Error:
                 CheckError();
-                _state = States.Stopped;
+                ChargeState = ChargeState.Stopped;
                 break;
             default:
                 throw new ArgumentOutOfRangeException();
@@ -180,7 +185,7 @@ public class ChargeController(
             Console.WriteLine("Disable");
             _ = charger.StopCharging();
             
-            _state = States.Stopped;
+            ChargeState = ChargeState.Stopped;
         }
     }
     
